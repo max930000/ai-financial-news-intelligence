@@ -1,72 +1,97 @@
-from datetime import datetime
+from __future__ import annotations
+
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from transformers import pipeline
 
-from src.ai.sentiment import MODEL_NAME, analyze_sentiment
-from src.database.models import News
+
+# 讓 python scripts/analyze_news.py 可以找到 src/
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.database.database import engine
 from src.database.models import News
-from src.ai.sentiment import analyze_sentiment
 
-def build_news_text(news: News) -> str:
-    parts = []
 
-    for field in ("title", "description", "content"):
-        value = getattr(news, field, None)
+MODEL_NAME = "ProsusAI/finbert"
+BATCH_SIZE = 8
 
-        if value:
-            parts.append(value)
+
+def build_text(news: News) -> str:
+    """
+    Combine useful news fields into the text sent to FinBERT.
+    """
+    parts = [news.title]
+
+    if news.description:
+        parts.append(news.description)
+
+    if news.content:
+        parts.append(news.content)
 
     return " ".join(parts)
 
 
-def main():
+def main() -> None:
+    print("Loading FinBERT...")
+
+    sentiment_analyzer = pipeline(
+        "text-classification",
+        model=MODEL_NAME,
+        tokenizer=MODEL_NAME,
+    )
+
+    print("FinBERT loaded.")
+
     with Session(engine) as session:
-        news_list = session.execute(
-            select(News).where(News.sentiment.is_(None))
+        news_items = session.execute(
+            select(News)
+            .where(News.sentiment.is_(None))
+            .order_by(News.id)
         ).scalars().all()
 
-        print(f"找到 {len(news_list)} 筆尚未分析的新聞")
+        if not news_items:
+            print("沒有尚未分析的新聞。")
+            return
 
-        success = 0
-        failed = 0
+        print(f"找到 {len(news_items)} 筆尚未分析的新聞。")
 
-        for news in news_list:
-            text = build_news_text(news)
+        texts = [
+            build_text(news)
+            for news in news_items
+        ]
 
-            if not text:
-                print(f"[SKIP] News {news.id}: 沒有可分析文字")
-                continue
+        results = sentiment_analyzer(
+            texts,
+            batch_size=BATCH_SIZE,
+            truncation=True,
+            max_length=512,
+        )
 
-            try:
-                result = analyze_sentiment(text)
+        for news, result in zip(news_items, results):
+            sentiment = result["label"].lower()
+            score = float(result["score"])
 
-                news.sentiment = result["label"]
-                news.sentiment_score = result["score"]
-                news.ai_model = MODEL_NAME
-                news.analyzed_at = datetime.now()
+            news.sentiment = sentiment
+            news.sentiment_score = score
+            news.ai_model = MODEL_NAME
+            news.analyzed_at = datetime.now(timezone.utc)
 
-                success += 1
-
-                print(
-                    f"[{news.id}] "
-                    f"{result['label']:8} "
-                    f"{result['score']:.4f} | "
-                    f"{getattr(news, 'title', '')[:60]}"
-                )
-
-            except Exception as e:
-                failed += 1
-                print(f"[ERROR] News {news.id}: {e}")
+            print(
+                f"[{news.id}] "
+                f"{sentiment.upper():8} "
+                f"{score:.4f} | "
+                f"{news.title}"
+            )
 
         session.commit()
 
         print()
-        print("AI 分析完成")
-        print(f"成功：{success}")
-        print(f"失敗：{failed}")
+        print(f"分析完成，共更新 {len(news_items)} 筆新聞。")
 
 
 if __name__ == "__main__":
