@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, String, Text
+from sqlalchemy import DateTime, String, Text, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
     """Base class for all ORM models."""
     pass
+
 
 
 def _utcnow() -> datetime:
@@ -18,6 +19,7 @@ def _utcnow() -> datetime:
 
 class News(Base):
     """Represents a single news article ingested from an RSS feed."""
+    
 
     __tablename__ = "news"
 
@@ -73,6 +75,26 @@ class News(Base):
         default=_utcnow,
     )
 
+    sentiment: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+    )
+
+    sentiment_score: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    ai_model: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    analyzed_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+    
     def __repr__(self) -> str:
         return (
             f"<News id={self.id} "

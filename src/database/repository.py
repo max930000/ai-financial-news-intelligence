@@ -98,6 +98,7 @@ class NewsRepository:
             published_at=item["published_at"],
             description=item["description"],
             content=item["content"],
+            
         )
 
 
