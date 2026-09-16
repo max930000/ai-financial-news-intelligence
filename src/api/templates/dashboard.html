@@ -1,125 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Financial News Intelligence Platform — Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Financial News Intelligence Platform — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <div class="wrap">
+<div class="wrap">
 
-    <header class="masthead">
-      <h1>AI Financial News Intelligence Platform</h1>
-      <p>Financial news sentiment analysis powered by FinBERT</p>
-    </header>
+<header class="masthead">
+<h1>AI Financial News Intelligence Platform</h1>
+<p>Financial news sentiment analysis powered by FinBERT</p>
+</header>
 
-    <section class="kpi-row">
-      <div class="kpi-card total">
-        <div class="label">Total News</div>
-        <div class="value">{{ total }}</div>
-      </div>
-      <div class="kpi-card positive">
-        <div class="label">Positive</div>
-        <div class="value">{{ positive }}</div>
-      </div>
-      <div class="kpi-card neutral">
-        <div class="label">Neutral</div>
-        <div class="value">{{ neutral }}</div>
-      </div>
-      <div class="kpi-card negative">
-        <div class="label">Negative</div>
-        <div class="value">{{ negative }}</div>
-      </div>
-      <div class="kpi-card confidence">
-        <div class="label">Average Confidence</div>
-        <div class="value">{{ "%.4f"|format(average_score) if average_score is not none else "N/A" }}</div>
-      </div>
-    </section>
+<section class="kpi-row">
+<div class="kpi-card total">
+<div class="label">Total News</div>
+<div class="value">{{ total }}</div>
+</div>
+<div class="kpi-card positive">
+<div class="label">Positive</div>
+<div class="value">{{ positive }}</div>
+</div>
+<div class="kpi-card neutral">
+<div class="label">Neutral</div>
+<div class="value">{{ neutral }}</div>
+</div>
+<div class="kpi-card negative">
+<div class="label">Negative</div>
+<div class="value">{{ negative }}</div>
+</div>
+<div class="kpi-card confidence">
+<div class="label">Average Confidence</div>
+<div class="value">{{ "%.4f"|format(average_score) if average_score is not none else "N/A" }}</div>
+</div>
+</section>
 
-    <section class="body-grid">
+<section class="body-grid">
 
-      <div class="panel">
-        <h2>Sentiment Distribution</h2>
-        <canvas
-            id="sentimentChart"
-            width="280"
-            height="280"
-            data-positive="{{ positive }}"
-            data-neutral="{{ neutral }}"
-            data-negative="{{ negative }}"
-        ></canvas>
-      </div>
+<div class="panel">
+<h2>Sentiment Distribution</h2>
+<canvas
+id="sentimentChart"
+width="280"
+height="280"
+data-positive="{{ positive }}"
+data-neutral="{{ neutral }}"
+data-negative="{{ negative }}"
+></canvas>
+</div>
 
-      <div class="panel">
-        <h2>Recent News</h2>
+<div class="panel">
+<h2>Recent News</h2>
 
         {% if recent_news %}
           {% for item in recent_news %}
-          <div class="news-item">
-            <div class="news-item-head">
-              <a class="title" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">
-                {{ item.title }}
-              </a>
-              {% if item.sentiment_score is not none %}
-              <span class="score">{{ "%.4f"|format(item.sentiment_score) }}</span>
+<div class="news-item">
+<div class="news-item-badges">
+              {% if item.category %}
+<span class="badge category">{{ item.category }}</span>
               {% endif %}
-            </div>
-            <div class="news-item-meta">
-              <span>{{ item.source }}{% if item.published_at %} — {{ item.published_at.strftime("%Y-%m-%d %H:%M") }}{% endif %}</span>
               {% if item.sentiment %}
-              <span class="badge {{ item.sentiment|lower }}">{{ item.sentiment|upper }}</span>
+<span class="badge {{ item.sentiment|lower }}">{{ item.sentiment|upper }}</span>
               {% endif %}
-            </div>
-          </div>
+              {% if item.sentiment_score is not none %}
+<span class="confidence">{{ "%.1f"|format(item.sentiment_score * 100) }}% confidence</span>
+              {% endif %}
+</div>
+
+<a class="title" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">
+              {{ item.title }}
+</a>
+
+            {% if item.summary %}
+<p class="summary">{{ item.summary }}</p>
+            {% endif %}
+
+<div class="news-item-meta">
+<span>{{ item.source }}</span>
+              {% if item.published_at %}
+<span class="dot">·</span>
+<span>{{ item.published_at.strftime("%Y-%m-%d %H:%M") }}</span>
+              {% endif %}
+</div>
+</div>
           {% endfor %}
         {% else %}
-          <p class="empty-state">No news available yet.</p>
+<p class="empty-state">No news available yet.</p>
         {% endif %}
-      </div>
+</div>
 
-    </section>
-  </div>
+</section>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script>
-  const ctx = document.getElementById("sentimentChart");
+const ctx = document.getElementById("sentimentChart");
 
-  const sentimentData = [
-    Number(ctx.dataset.positive),
-    Number(ctx.dataset.neutral),
-    Number(ctx.dataset.negative)
+const sentimentData = [
+Number(ctx.dataset.positive),
+Number(ctx.dataset.neutral),
+Number(ctx.dataset.negative)
   ];
 
-  new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: ["Positive", "Neutral", "Negative"],
-      datasets: [{
-        data: sentimentData,
-        backgroundColor: ["#2f6b4f", "#6b7280", "#a13d3d"],
-        borderColor: "#f6f2e7",
-        borderWidth: 2
+new Chart(ctx, {
+type: "doughnut",
+data: {
+labels: ["Positive", "Neutral", "Negative"],
+datasets: [{
+data: sentimentData,
+backgroundColor: ["#2f6b4f", "#6b7280", "#a13d3d"],
+borderColor: "#f6f2e7",
+borderWidth: 2
       }]
     },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: {
-            color: "#1c2541",
-            font: {
-              family: "Inter",
-              size: 13
+options: {
+responsive: true,
+plugins: {
+legend: {
+position: "bottom",
+labels: {
+color: "#1c2541",
+font: {
+family: "Inter",
+size: 13
             }
           }
         }
       }
     }
-  });
+});
 </script>
 </body>
 </html>

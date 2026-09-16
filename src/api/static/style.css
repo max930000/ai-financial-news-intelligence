@@ -123,48 +123,63 @@ body {
 /* ---------------- Recent news list ---------------- */
 
 .news-item {
-  padding: 14px 0;
+  margin: 0 -20px;
+  padding: 16px 20px;
   border-top: 1px solid var(--line);
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
 }
 
 .news-item:first-child {
   border-top: none;
-  padding-top: 0;
 }
 
-.news-item-head {
+.news-item:hover {
+  background: rgba(184, 134, 59, 0.07);
+}
+
+.news-item-badges {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .news-item a.title {
+  display: block;
   font-family: "Source Serif 4", Georgia, serif;
   font-size: 16px;
+  font-weight: 600;
   color: var(--ink);
   text-decoration: none;
   line-height: 1.35;
+  margin-bottom: 6px;
 }
 
 .news-item a.title:hover {
   text-decoration: underline;
+  color: var(--gold);
 }
 
-.news-item .score {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 13px;
+.news-item .summary {
+  margin: 0 0 10px;
+  font-size: 14px;
   color: var(--ink-muted);
-  white-space: nowrap;
-  padding-top: 2px;
+  line-height: 1.55;
 }
 
 .news-item-meta {
   display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-  font-size: 13px;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
   color: var(--ink-muted);
+  opacity: 0.85;
+}
+
+.news-item-meta .dot {
+  opacity: 0.6;
 }
 
 .badge {
@@ -175,11 +190,28 @@ body {
   padding: 2px 8px;
   border-radius: 2px;
   border: 1px solid currentColor;
+  line-height: 1.6;
 }
 
 .badge.positive { color: var(--positive); }
 .badge.neutral { color: var(--neutral); }
 .badge.negative { color: var(--negative); }
+
+.badge.category {
+  color: var(--ink-muted);
+  background: var(--paper);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+}
+
+.confidence {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  margin-left: auto;
+}
 
 .empty-state {
   color: var(--ink-muted);

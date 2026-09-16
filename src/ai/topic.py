@@ -1,3 +1,11 @@
+"""
+Pydantic response models for the FastAPI layer (Sprint 3 Step 2).
+
+These are pure output schemas: they describe what the API returns,
+and are built directly from the existing `News` ORM model via
+`from_attributes` — no new DB concepts introduced here.
+"""
+
 """Zero-shot topic classification for financial news articles."""
 
 from functools import lru_cache
