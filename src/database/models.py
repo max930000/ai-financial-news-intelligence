@@ -44,6 +44,11 @@ class News(Base):
         nullable=False,
     )
 
+    language: Mapped[str | None] = mapped_column(
+        String(10),
+        nullable=True,
+    )
+    
     author: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,

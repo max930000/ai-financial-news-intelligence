@@ -97,7 +97,7 @@ def analyze_single_news(news: News) -> None:
     script never redoes work that was already done in a previous run.
     """
     text = _build_text(news)  # raises nothing itself; may be empty
-
+    
     if news.sentiment is None:
         sentiment_result = analyze_sentiment(text)  # raises ValueError if text is empty
         news.sentiment = sentiment_result.get("label")
@@ -109,6 +109,8 @@ def analyze_single_news(news: News) -> None:
 
     if news.summary is None:
         news.summary = _build_summary(news)
+
+    
 
     news.ai_model = AI_MODEL_LABEL
     news.analyzed_at = datetime.now(timezone.utc)

@@ -18,22 +18,15 @@ python -m pip install jinja2
 python -m pip install pydantic
 python -m pip install feedparser 
 
-rm data/news.db 清除ＤＢ
-python -m src.database.database
-python -m src.database.repository 重抓ＲＳＳ
-python -m src.ingestion.rss_collector 蒐集rss
-python -m scripts.analyze_news 最後跑分析
-
-uvicorn src.api.main:app --reload
-http://127.0.0.1:8000/dashboard
-
 rm data/news.db
 
 python -m src.database.database
 
-python -m scripts.ingest_news
+python -m src.database.repository
 
 python -m scripts.analyze_news
 
 uvicorn src.api.main:app --reload
+
+http://127.0.0.1:8000/dashboard
 """

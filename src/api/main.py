@@ -52,16 +52,31 @@ def get_db() -> Generator[Session, None, None]:
 
 
 @app.get("/news", response_model=list[NewsListItem])
-def list_news(db: Session = Depends(get_db)) -> list[News]:
-    """
-    取得新聞列表，依 id 由大到小排序。
+def list_news(
+    source: str | None = None,
+    language: str | None = None,
+    db: Session = Depends(get_db),
+) -> list[News]:
 
-    目前資料量只有 52 筆，所以不做 pagination；
-    未來資料量變大時，可以在這裡加 limit/offset 參數，
-    endpoint 的簽名不需要大改。
-    """
-    statement = select(News).order_by(News.id.desc())
-    return list(db.execute(statement).scalars().all())
+    statement = select(News)
+
+    if source:
+        statement = statement.where(
+            News.source == source
+        )
+
+    if language:
+        statement = statement.where(
+            News.language == language
+        )
+
+    statement = statement.order_by(
+        News.id.desc()
+    )
+
+    return list(
+        db.execute(statement).scalars().all()
+    )
 
 
 @app.get("/news/{news_id}", response_model=NewsDetail)

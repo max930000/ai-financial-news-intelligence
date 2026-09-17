@@ -20,11 +20,13 @@ class NewsListItem(BaseModel):
     title: str
     url: str
     source: str
+    language: str | None
     published_at: datetime | None
     sentiment: str | None
     sentiment_score: float | None
     ai_model: str | None
     analyzed_at: datetime | None
+    
 
 
 class NewsDetail(BaseModel):
@@ -46,6 +48,7 @@ class NewsDetail(BaseModel):
     sentiment_score: float | None
     ai_model: str | None
     analyzed_at: datetime | None
+    language: str | None
 
 
 class SentimentAnalytics(BaseModel):

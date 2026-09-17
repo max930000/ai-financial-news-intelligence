@@ -71,7 +71,7 @@ class NewsRepository:
         # 可以整批 rollback，避免存到一半的不一致狀態。
         try:
             self.session.commit()
-        except:
+        except Exception:
             self.session.rollback()
             raise
         
@@ -94,29 +94,66 @@ class NewsRepository:
             title=item["title"],
             url=item["url"],
             source=item["source"],
+            language=item["language"],
             author=item["author"],
             published_at=item["published_at"],
             description=item["description"],
             content=item["content"],
-            
         )
 
 
 if __name__ == "__main__":
-    # 簡單的手動測試進入點：
-    #   python -m src.database.repository
-    # 流程：建表 -> 抓 RSS -> 存進 SQLite -> 印出統計數字
+    # 手動執行：
+    # python -m src.database.repository
+    #
+    # 流程：
+    # 建表 -> 抓多個 RSS -> 存進 SQLite -> 印出統計
 
     create_tables()
 
-    test_feed_url = "https://feeds.bbci.co.uk/news/business/rss.xml"
-    collector = RSSCollector(test_feed_url)
-    fetched_items = collector.fetch()
+    RSS_FEEDS = [
+    {
+        "name": "BBC Business",
+        "url": "https://feeds.bbci.co.uk/news/business/rss.xml",
+        "language": "en",
+    },
+    {
+        "name": "Yahoo Finance Taiwan",
+        "url": "https://tw.stock.yahoo.com/rss?category=intl-markets",
+        "language": "zh",
+    },
+    ]
+
+    total_fetched = 0
+    total_added = 0
+    total_skipped = 0
 
     with Session(engine) as session:
         repository = NewsRepository(session)
-        result = repository.save_news_items(fetched_items)
 
-    print(f"RSS 抓到: {len(fetched_items)} 筆")
-    print(f"新增: {result.added} 筆")
-    print(f"跳過（重複）: {result.skipped} 筆")
+        for feed in RSS_FEEDS:
+            print(f"\n正在抓取：{feed['name']}")
+
+            collector = RSSCollector(
+                feed_url=feed["url"],
+                source_name=feed["name"],
+                language=feed["language"],
+            )
+
+            fetched_items = collector.fetch()
+
+            result = repository.save_news_items(fetched_items)
+
+            print(f"RSS 抓到: {len(fetched_items)} 筆")
+            print(f"新增: {result.added} 筆")
+            print(f"跳過（重複）: {result.skipped} 筆")
+
+            total_fetched += len(fetched_items)
+            total_added += result.added
+            total_skipped += result.skipped
+
+    print("\n" + "=" * 50)
+    print("全部來源處理完成")
+    print(f"總抓取: {total_fetched} 筆")
+    print(f"總新增: {total_added} 筆")
+    print(f"總跳過（重複）: {total_skipped} 筆")

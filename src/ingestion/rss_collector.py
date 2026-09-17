@@ -8,7 +8,7 @@ RSS 新聞收集模組 (Sprint 1)
 
 from datetime import datetime, timezone
 from typing import Any, TypedDict
-
+import requests
 import feedparser
 
 
@@ -18,6 +18,7 @@ class NewsItem(TypedDict):
     title: str
     url: str
     source: str
+    language: str
     author: str | None
     published_at: datetime | None
     description: str | None
@@ -37,9 +38,11 @@ class RSSCollector:
     """
 
     def __init__(
-        self,
-        feed_url: str,
-        source_name: str | None = None,
+    self,
+    feed_url: str,
+    source_name: str | None = None,
+    language: str = "en",
+
     ) -> None:
         """
         Args:
@@ -47,9 +50,12 @@ class RSSCollector:
             source_name:
                 手動指定來源名稱。
                 若沒有提供，會嘗試從 RSS metadata 自動取得。
+            language:
+                新聞語言，例如 "en"、"zh"。
         """
         self.feed_url = feed_url
         self.source_name = source_name
+        self.language = language
 
     def fetch(self) -> list[NewsItem]:
         """
@@ -60,7 +66,35 @@ class RSSCollector:
         """
 
         try:
-            parsed_feed = feedparser.parse(self.feed_url)
+            headers = {
+                "User-Agent": (
+                    "Mozilla/5.0 "
+                    "(Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) "
+                    "Chrome/120.0 Safari/537.36"
+                )
+            }
+
+            response = requests.get(
+                self.feed_url,
+                headers=headers,
+                timeout=15,
+            )
+
+            response.raise_for_status()
+
+            parsed_feed = feedparser.parse(
+                response.content
+            )
+
+        except requests.RequestException as error:
+            print(
+                f"[RSSCollector] 無法取得 feed: "
+                f"{self.feed_url} ({error})"
+            )
+            return []
+
         except Exception as error:
             print(
                 f"[RSSCollector] 無法解析 feed: "
@@ -74,6 +108,21 @@ class RSSCollector:
                 f"{self.feed_url} "
                 f"({getattr(parsed_feed, 'bozo_exception', '未知原因')})"
             )
+
+        print(
+            f"[RSSCollector] HTTP status: "
+            f"{response.status_code}"
+        )
+
+        print(
+            f"[RSSCollector] Content-Type: "
+            f"{response.headers.get('Content-Type')}"
+        )
+
+        print(
+            f"[RSSCollector] 解析到 "
+            f"{len(parsed_feed.entries)} 筆 entries"
+        )
 
         source_name = (
             self.source_name
@@ -89,8 +138,6 @@ class RSSCollector:
                     source_name,
                 )
 
-                # 最基本的資料驗證：
-                # 沒有標題或 URL 的新聞不進入後續流程。
                 if not item["title"] or not item["url"]:
                     print(
                         "[RSSCollector] 跳過缺少 title/url 的新聞"
@@ -137,9 +184,9 @@ class RSSCollector:
         )
 
     def _parse_entry(
-        self,
-        entry: Any,
-        source_name: str,
+    self,
+    entry: Any,
+    source_name: str,
     ) -> NewsItem:
         """
         將單一 RSS entry 轉換成統一 NewsItem。
@@ -160,6 +207,8 @@ class RSSCollector:
 
             "source": source_name,
 
+            "language": self.language,
+
             "author": getattr(
                 entry,
                 "author",
@@ -178,7 +227,7 @@ class RSSCollector:
             "content":
                 self._extract_content(entry),
         }
-
+    
     def _parse_published_at(
         self,
         entry: Any,
@@ -265,28 +314,33 @@ def _print_preview(
         print(
             f"   網址: {item['url']}"
         )
+        print(
+            f"   語言: {item['language']}"
+)
         print()
 
 
 if __name__ == "__main__":
 
     RSS_FEEDS = [
-        {
-            "name": "BBC News",
-            "url":
-                "https://feeds.bbci.co.uk/news/business/rss.xml",
-        },
+    {
+        "name": "BBC News",
+        "url":
+            "https://feeds.bbci.co.uk/news/business/rss.xml",
+        "language": "en",
+    },
 
-        {
-            "name": "Yahoo Finance Taiwan - International",
-            "url":
-                "https://tw.stock.yahoo.com/rss?category=intl-markets",
-        },
+    {
+        "name": "Yahoo Finance Taiwan - International",
+        "url":
+            "https://tw.stock.yahoo.com/rss?category=intl-markets",
+        "language": "zh",
+    },
+]
 
         # CNBC 可以放在這裡，
         # 但建議先實際測試 feed 是否仍可正常使用。
         # 不要先把未驗證 URL 寫死進正式 pipeline。
-    ]
 
     all_items: list[NewsItem] = []
 
@@ -299,6 +353,7 @@ if __name__ == "__main__":
         collector = RSSCollector(
             feed_url=feed["url"],
             source_name=feed["name"],
+            language=feed["language"],
         )
 
         items = collector.fetch()
