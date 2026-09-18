@@ -10,7 +10,24 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+class AnalyzeRequest(BaseModel):
+    """User-submitted news article for AI analysis."""
 
+    title: str
+    description: str | None = None
+    content: str | None = None
+
+
+class AnalyzeResponse(BaseModel):
+    """AI analysis result for a submitted news article."""
+
+    language: str
+    sentiment: str | None
+    sentiment_score: float | None
+    category: str | None
+    summary: str | None
+
+    
 class NewsListItem(BaseModel):
     """回傳給 GET /news 的單筆新聞摘要格式。"""
 

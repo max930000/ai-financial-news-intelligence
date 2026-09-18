@@ -29,46 +29,11 @@ from datetime import datetime, timezone
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from src.ai.sentiment import analyze_sentiment
-from src.ai.summarizer import is_title_description_consistent, summarize_news
-from src.ai.topic import classify_topic
+from src.ai.analyzer import analyze_text
 from src.database.database import engine
 from src.database.models import News
 
 AI_MODEL_LABEL = "finbert+bart-large-mnli+distilbart-cnn-12-6"
-
-
-def _build_text(news: News) -> str:
-    """Combine title, description, and content into one text blob for AI analysis."""
-    parts = [news.title, news.description, news.content]
-    return " ".join(p for p in parts if p)
-
-
-def _build_summary(news: News) -> str | None:
-    """Summarize a news row from its `description` only, with a data-quality guard.
-
-    Summary input is `description` (not title/content): RSS descriptions are
-    usually already a compressed blurb, so the summarizer just tightens it
-    further. Mixing in the title risks the model picking the wrong focus
-    when title and description describe different stories (a known issue
-    with some RSS sources).
-
-    Returns None (leaving `news.summary` empty) when:
-      - description is missing/blank
-      - title and description don't share any significant words, which
-        usually means the RSS entry itself is mismatched — summarizing it
-        would just be a confident-sounding summary of the wrong story.
-    """
-    if not news.description or not news.description.strip():
-        print(f"[SKIP-SUMMARY] id={news.id} no description, summary left empty")
-        return None
-
-    if not is_title_description_consistent(news.title, news.description):
-        print(f"[SKIP-SUMMARY] id={news.id} title/description mismatch, summary left empty")
-        return None
-
-    return summarize_news(news.description)
-
 
 def _get_pending_news(session) -> list[News]:
     """Fetch news rows missing sentiment, category, and/or summary.
@@ -91,31 +56,29 @@ def _get_pending_news(session) -> list[News]:
 
 
 def analyze_single_news(news: News) -> None:
-    """Fill in whichever of sentiment/category/summary is missing on one News row.
+    result = analyze_text(
+        title=news.title,
+        description=news.description,
+        content=news.content,
+        language=news.language,
+        run_sentiment=news.sentiment is None,
+        run_topic=news.category is None,
+        run_summary=news.summary is None,
+    )
 
-    Fields that are already populated are left untouched, so re-running this
-    script never redoes work that was already done in a previous run.
-    """
-    text = _build_text(news)  # raises nothing itself; may be empty
-    
     if news.sentiment is None:
-        sentiment_result = analyze_sentiment(text)  # raises ValueError if text is empty
-        news.sentiment = sentiment_result.get("label")
-        news.sentiment_score = sentiment_result.get("score")
+        news.sentiment = result["sentiment"]
+        news.sentiment_score = result["sentiment_score"]
 
     if news.category is None:
-        topic_result = classify_topic(text)
-        news.category = topic_result.get("category")
+        news.category = result["category"]
 
     if news.summary is None:
-        news.summary = _build_summary(news)
-
-    
+        news.summary = result["summary"]
 
     news.ai_model = AI_MODEL_LABEL
     news.analyzed_at = datetime.now(timezone.utc)
-
-
+    
 def run_analysis() -> None:
     """Analyze all unanalyzed news rows, committing after each successful update.
 

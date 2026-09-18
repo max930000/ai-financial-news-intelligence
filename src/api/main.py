@@ -20,7 +20,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-
+from src.api.schemas import (
+    AnalyzeRequest,
+    AnalyzeResponse,
+    NewsDetail,
+    NewsListItem,
+    SentimentAnalytics,
+)
+from src.ai.analyzer import analyze_text
 from src.api.schemas import NewsDetail, NewsListItem, SentimentAnalytics
 from src.database.database import engine
 from src.database.models import News
@@ -89,6 +96,42 @@ def get_sentiment_analytics(db: Session = Depends(get_db)) -> SentimentAnalytics
     """回傳目前新聞的情緒分析統計（JSON，給 API 使用者/程式呼叫）。"""
     stats = _compute_sentiment_stats(db)
     return SentimentAnalytics(**stats)
+
+@app.post("/analyze", response_model=AnalyzeResponse)
+def analyze_news(request: AnalyzeRequest) -> AnalyzeResponse:
+    """
+    Analyze a user-submitted English financial news article.
+
+    This endpoint performs AI inference only.
+    It does not save the submitted article to the database.
+    """
+
+    if not request.title.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Title cannot be empty.",
+        )
+
+    try:
+        result = analyze_text(
+            title=request.title,
+            description=request.description,
+            content=request.content,
+            language="en",
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+
+    return AnalyzeResponse(
+        language="en",
+        sentiment=result["sentiment"],
+        sentiment_score=result["sentiment_score"],
+        category=result["category"],
+        summary=result["summary"],
+    )
 
 
 @app.get("/dashboard")
