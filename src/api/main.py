@@ -1,5 +1,5 @@
 """
-FastAPI app (Sprint 3 Step 2 + Step 3)
+FastAPI app 
 
 提供三個唯讀 JSON endpoint，以及一個 HTML Dashboard，
 全部直接查詢既有的 data/news.db：
@@ -7,10 +7,6 @@ FastAPI app (Sprint 3 Step 2 + Step 3)
     GET /news/{news_id}
     GET /analytics/sentiment
     GET /dashboard
-
-這一層刻意不建立 service layer 或 repository layer——
-邏輯量很小，直接在 endpoint 裡用 SQLAlchemy 查詢即可，
-之後如果邏輯變複雜，再抽也不遲。
 
 啟動方式（在專案根目錄）：
     uvicorn src.api.main:app --reload
@@ -100,19 +96,32 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     """
     Sprint 3 Step 3：Dashboard 頁面。
 
-    後端一次算好 KPI 統計 + 最近 10 筆新聞，直接傳給 Jinja2 template 渲染，
-    瀏覽器端不再另外呼叫 /news 或 /analytics/sentiment，
-    這樣資料來源單一、也比較容易在面試時解釋整個流程。
+    後端一次算好 KPI 統計 + 最近 10 筆新聞 + 全部新聞，
+    直接傳給 Jinja2 template 渲染。
     """
     stats = _compute_sentiment_stats(db)
 
-    recent_statement = select(News).order_by(News.id.desc()).limit(10)
+    recent_statement = (
+        select(News)
+        .order_by(News.id.desc())
+        .limit(10)
+    )
     recent_news = db.execute(recent_statement).scalars().all()
+
+    all_news_statement = (
+        select(News)
+        .order_by(News.id.desc())
+    )
+    all_news = db.execute(all_news_statement).scalars().all()
 
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
-        context={**stats, "recent_news": recent_news},
+        context={
+            **stats,
+            "recent_news": recent_news,
+            "all_news": all_news,
+        },
     )
 
 

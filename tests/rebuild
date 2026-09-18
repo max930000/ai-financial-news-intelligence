@@ -18,6 +18,9 @@ python -m pip install jinja2
 python -m pip install pydantic
 python -m pip install feedparser 
 
+source .venv/bin/activate 虛擬環境
+pip list
+
 rm data/news.db
 
 python -m src.database.database
@@ -29,4 +32,5 @@ python -m scripts.analyze_news
 uvicorn src.api.main:app --reload
 
 http://127.0.0.1:8000/dashboard
+
 """
