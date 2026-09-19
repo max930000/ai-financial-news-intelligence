@@ -24,6 +24,7 @@ Interfaces this script relies on (confirmed against the actual project code):
       sentiment, sentiment_score, category, summary, ai_model, analyzed_at
 """
 
+import sys
 from datetime import datetime, timezone
 
 from sqlalchemy import or_
@@ -32,6 +33,13 @@ from sqlalchemy.orm import Session
 from src.ai.analyzer import analyze_text
 from src.database.database import engine
 from src.database.models import News
+
+# Windows consoles often default to a legacy codepage (e.g. cp950) that can't
+# encode every character our summaries may contain (e.g. em dashes, smart
+# quotes). Without this, print() can raise UnicodeEncodeError, which gets
+# caught by the per-article try/except below and misreported as an analysis
+# failure even though the DB write already succeeded.
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 AI_MODEL_LABEL = "finbert+bart-large-mnli+distilbart-cnn-12-6"
 

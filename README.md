@@ -68,6 +68,23 @@ python -m unittest tests.test_paragraphs -v
 
 新聞蒐集和批次分析目前由命令觸發。啟動網站不會自動抓取或分析新聞。
 
+## 標題照妖鏡：文章輸入（開發中）
+
+`/check` 是新的單篇檢查流程的入口，目前只完成到「輸入與確認」：貼上新聞網址 → 擷取標題與正文 → 正文不可用時顯示原因並改貼內文 → 預覽、可編輯並確認 → 存入 `articles` 資料表。切句、標題主張分析與結果畫面尚未實作。
+
+| 路由 | 功能 |
+| --- | --- |
+| `GET /check` | 輸入頁面 |
+| `POST /articles/preview` | 擷取一篇文章，不存檔；擷取失敗也回傳 200，以 `failure_reason` 說明原因 |
+| `POST /articles` | 儲存使用者確認的標題與正文；相同輸入重複確認會沿用同一筆 |
+| `GET /articles/{id}` | 讀回已確認的文章 |
+
+- **支援來源**：只有 `src/ingestion/article_sources.py` 列出的網站（目前為 Yahoo奇摩新聞／股市）。新增來源前先確認使用條款與 robots.txt，並用真實文章測過擷取結果。
+- **擷取限制**：只接受該來源網域的 http(s) 網址；每一次轉址與 robots.txt 都會重新檢查，網域須解析到公開位址；限制轉址次數、下載大小與總時間。實作細節與已知缺口見 `src/ingestion/article_fetcher.py` 開頭說明。
+- **正文長度**：少於 100 字視為不可用；100～299 字可用但會警告；超過 20,000 字直接拒絕，不會截斷。
+- **輸入方式**：儲存時標記為 `fetched`（未修改）、`fetched_edited`（擷取後編輯）或 `pasted`（手動貼上）。編輯後的內容是新的一筆，原本那筆不會被改寫。
+- 啟動網站時會自動建立缺少的資料表（例如 `articles`），不會修改或刪除既有表。
+
 ## 系統流程
 
 ### 1. 蒐集、入庫、批次分析
@@ -412,7 +429,14 @@ ai-financial-news-intelligence/
 
 ## 測試與部署現況
 
-目前 `tests/` 中沒有正式自動化測試案例；`tests/rebuild` 是操作筆記。語法檢查或成功匯入套件，不能取代實際的 API、資料庫及模型測試。
+文章輸入流程（擷取、儲存、`/check` 相關 API）有自動化測試，不需要網路，也不需要安裝 torch：
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest tests
+```
+
+其餘部分（RSS 蒐集、AI 分析、Dashboard）仍沒有自動化測試；`tests/rebuild` 是操作筆記。語法檢查或成功匯入套件，不能取代實際的 API、資料庫及模型測試。
 
 手動驗證可以依序檢查：
 

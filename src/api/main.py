@@ -47,7 +47,6 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
-
 app.include_router(article_router)
 app.include_router(paragraph_router)
 
