@@ -9,8 +9,12 @@ requests==2.34.2
 SQLAlchemy==2.0.52
 typing_extensions==4.16.0
 urllib3==2.7.0
+
 fastapi
 uvicorn[standard]
 jinja2
 python-multipart
 beautifulsoup4
+
+torch==2.14.0
+transformers==5.17.0
