@@ -13,6 +13,7 @@ FastAPI app
 """
 
 from collections.abc import Generator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -28,15 +29,27 @@ from src.api.schemas import (
     SentimentAnalytics,
 )
 from src.ai.analyzer import analyze_text
+from src.api.article_routes import router as article_router
 from src.api.schemas import NewsDetail, NewsListItem, SentimentAnalytics
-from src.database.database import engine
+from src.database.database import create_tables, engine
 from src.database.models import News
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Adds tables that do not exist yet (such as `articles`); never alters or
+    # deletes existing ones.
+    create_tables()
+    yield
+
 
 app = FastAPI(
     title="AI Financial News Intelligence Platform",
     description="Sprint 3：唯讀 API + Dashboard，查詢新聞與情緒分析統計。",
     version="0.1.0",
+    lifespan=lifespan,
 )
+app.include_router(article_router)
 
 # Dashboard 用的 templates / static 檔案位置，都相對這個檔案所在目錄，
 # 這樣不管從哪個工作目錄啟動 uvicorn，路徑都是一致的。

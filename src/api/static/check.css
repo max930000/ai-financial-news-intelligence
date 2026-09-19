@@ -1,0 +1,271 @@
+/* Article-input page. Colour tokens (--paper, --ink, --gold …) come from style.css. */
+
+.chk-title {
+  font-family: "Noto Serif TC", "Source Serif 4", Georgia, serif;
+}
+
+.chk-main {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ---------------- Steps ---------------- */
+
+.chk-steps {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.chk-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+}
+
+.chk-steps li span {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chk-steps li[aria-current="step"] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.chk-steps li[aria-current="step"] span {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper-raised);
+}
+
+.chk-steps li.is-done span {
+  background: var(--positive);
+  border-color: var(--positive);
+  color: #fff;
+}
+
+/* ---------------- Panels ---------------- */
+
+.chk-panel {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold);
+  border-radius: 3px;
+  padding: 24px;
+}
+
+.chk-panel[hidden],
+.chk-error[hidden],
+.chk-alert[hidden],
+.chk-warnings[hidden] {
+  display: none;
+}
+
+.chk-panel-done {
+  border-top-color: var(--positive);
+}
+
+.chk-panel h2 {
+  font-family: "Noto Serif TC", "Source Serif 4", Georgia, serif;
+  font-size: 22px;
+  margin: 0 0 8px;
+  outline: none;
+}
+
+.chk-panel label {
+  display: block;
+  margin: 18px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chk-panel input[type="url"],
+.chk-panel input[type="text"],
+.chk-panel textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #fffdf7;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS from zooming on focus */
+  line-height: 1.7;
+}
+
+.chk-panel textarea {
+  resize: vertical;
+  min-height: 160px;
+}
+
+.chk-panel input:focus-visible,
+.chk-panel textarea:focus-visible,
+.chk-btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.chk-hint {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.chk-count {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.chk-count.is-bad {
+  color: var(--negative);
+}
+
+.chk-error {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--negative);
+}
+
+/* ---------------- Alerts, warnings ---------------- */
+
+.chk-alert {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-left: 4px solid var(--negative);
+  background: #f5e4e0;
+  border-radius: 0 3px 3px 0;
+}
+
+.chk-alert p {
+  margin: 4px 0 0;
+}
+
+.chk-warnings {
+  margin: 14px 0 0;
+  padding: 10px 14px 10px 30px;
+  border-left: 4px solid var(--gold);
+  background: #f3e8cf;
+  border-radius: 0 3px 3px 0;
+  font-size: 14px;
+}
+
+/* ---------------- Meta list ---------------- */
+
+.chk-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 14px 0 0;
+  font-size: 14px;
+}
+
+.chk-meta dt {
+  color: var(--ink-muted);
+}
+
+.chk-meta dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.chk-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------------- Buttons ---------------- */
+
+.chk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin-top: 20px;
+}
+
+.chk-btn {
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.chk-btn-primary {
+  padding: 10px 22px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--paper-raised);
+  font-weight: 600;
+}
+
+.chk-btn-primary:hover {
+  background: #2b3760;
+}
+
+.chk-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.chk-btn-link {
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.chk-btn-link:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 560px) {
+  .wrap {
+    padding: 0 16px 48px;
+  }
+
+  .chk-panel {
+    padding: 18px 16px;
+  }
+
+  .chk-steps li {
+    padding-right: 6px;
+    font-size: 13px;
+  }
+
+  .chk-meta {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .chk-meta dd {
+    margin-bottom: 8px;
+  }
+
+  .chk-btn-primary {
+    width: 100%;
+  }
+}
