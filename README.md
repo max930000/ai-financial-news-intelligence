@@ -6,6 +6,36 @@
 
 > 本專案用於探索新聞資訊處理，不提供股價預測或投資建議。目前為開發中的原型；事件聚合仍是後續規劃。
 
+## 標題照妖鏡：正文段落準備（新增）
+
+接收 Max 提供的標題與完整**純文字**正文。此階段只整理段落，不擷取網址、不呼叫模型、不判斷標題，也不寫入新聞資料庫。
+
+啟動 `python -m uvicorn src.api.main:app --reload` 後開啟 `/paragraphs`，可貼上文章、預覽 P001 等編號、點選高亮原段落並下載 JSON。舊 Dashboard 也提供入口。
+
+`POST /articles/prepare` 接收：
+
+```json
+{"title":"公司全面漲價","content":"公司仍在評估。\n\n目前只涉及部分產品。","paragraph_mode":"blank_lines"}
+```
+
+- `blank_lines`（預設）：空白行分段，段落內單次換行保留，適合有折行的文字。
+- `line_breaks`：每次換行分段，適合上游用單次換行連接段落的輸出。
+- 不依標點切句、不改寫或截斷；沒有段落邊界就保留一整段。上游需保留換行。
+- `original_text` 原樣保留；段落視圖只統一 CRLF/CR 換行、移除段落首尾空白，不修改內部數字、引號與標點。標題獨立保存。
+- 空白輸入回傳 422；標題最多 2,000 字元、正文最多 200,000 字元，超限拒絕而非截斷。此限制不是模型 context window。
+- `document_id` 由完整輸入、分段方式與處理版本計算；輸入變更後，舊引用不可沿用。
+- 後續模型可接收完整 `paragraphs` 清單，不需逐段獨立分析；每個段落物件包含 `id` 與 `text`。
+
+`src.processing.cleaner.resolve_evidence(article, document_id, paragraph_ids)` 會驗證版本與 ID，並從原段落取得引用文字。不存在的 ID 或版本不符會拒絕整個引用結果。這只驗證引用位置，不保證模型判斷正確。目前尚未串接模型結果 API，也未持久化此預覽資料；下載 JSON 可保存本次輸入。
+
+新檔案：`src/api/paragraphs.py`（路由與 schemas）、`src/api/templates/paragraphs.html`、`src/api/static/paragraphs.js`、`src/api/static/paragraphs.css`；核心處理位於 `src/processing/cleaner.py`。
+
+測試（不下載模型、不修改新聞 DB）：
+
+```bash
+python -m unittest tests.test_paragraphs -v
+```
+
 ## 目錄
 
 - [目前功能](#目前功能)

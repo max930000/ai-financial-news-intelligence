@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>標題照妖鏡｜正文段落預覽</title>
+  <link rel="stylesheet" href="/static/paragraphs.css">
+  <script src="/static/paragraphs.js" defer></script>
+</head>
+<body>
+<main>
+  <header><p class="eyebrow">標題照妖鏡 · 正文準備</p><h1>保留上下文，讓每段證據有位置</h1>
+    <p>貼上 Max 提供的標題與完整內文，預覽段落編號。這個步驟只整理正文，尚未執行 AI 判斷。</p>
+    <a href="/dashboard">原新聞 Dashboard</a> · <a href="/docs">API 文件</a>
+  </header>
+  <form id="prepare-form">
+    <label for="title">新聞標題</label>
+    <input id="title" name="title" required maxlength="2000" placeholder="請輸入新聞標題">
+    <label for="content">完整內文（純文字）</label>
+    <textarea id="content" name="content" required maxlength="200000" rows="12" placeholder="請保留原本的段落與換行"></textarea>
+    <label for="paragraph-mode">正文如何區分段落？</label>
+    <select id="paragraph-mode">
+      <option value="blank_lines">以空白行分段（保留段內單次換行）</option>
+      <option value="line_breaks">每次換行就是一段</option>
+    </select>
+    <p class="hint">不依句號或小數點切句。沒有分段符號時保留為一整段，不猜測段落。</p>
+    <div class="actions"><button type="submit" id="prepare-button">產生段落預覽</button><button type="button" id="sample-button" class="secondary">載入虛構範例</button></div>
+    <p id="error" role="alert" hidden></p>
+  </form>
+  <p id="status" role="status" aria-live="polite"></p>
+  <section id="result" hidden aria-labelledby="result-title">
+    <div class="result-header"><h2 id="result-title">正文段落</h2><button type="button" id="download-button">下載 JSON</button></div>
+    <p id="paragraph-note" class="hint"></p>
+    <p>點選段落編號可高亮該段，供之後的引用介面使用；這不是模型選出的證據。</p>
+    <nav id="paragraph-nav" aria-label="段落導覽"></nav>
+    <div id="paragraph-list"></div>
+    <details><summary>查看輸入原文（未改寫）</summary><pre id="original-text"></pre></details>
+  </section>
+</main>
+</body>
+</html>
