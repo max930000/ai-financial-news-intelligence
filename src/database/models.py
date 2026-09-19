@@ -111,3 +111,40 @@ class News(Base):
             f"title={self.title!r} "
             f"source={self.source!r}>"
         )
+
+
+class Article(Base):
+    """
+    One confirmed input for the headline-consistency checker.
+
+    Separate from `News` (RSS items): this holds the full body the user
+    confirmed, either fetched from a URL or pasted. A row is never updated
+    after it is created, so later evidence can always point back to the exact
+    text that was analysed. An edited body is a new row.
+    """
+
+    __tablename__ = "articles"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+
+    # NULL when the text was pasted without a source URL.
+    url: Mapped[str | None] = mapped_column(String(2048), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    source: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    fetched_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+
+    # fetched | fetched_edited | pasted
+    input_origin: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Why the automatic fetch failed, when the user pasted text instead.
+    fetch_failure_reason: Mapped[str | None] = mapped_column(String(40), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=_utcnow
+    )
+
+    def __repr__(self) -> str:
+        return f"<Article id={self.id} title={self.title!r} origin={self.input_origin}>"
