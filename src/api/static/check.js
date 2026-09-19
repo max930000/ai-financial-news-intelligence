@@ -289,6 +289,7 @@
   };
 
   function openDone(article) {
+    $("analyze-link").href = `/paragraphs?article_id=${encodeURIComponent(article.id)}`;
     $("done-summary").textContent = article.created
       ? `文章 #${article.id} 已儲存。`
       : `先前已確認過相同內容，沿用文章 #${article.id}。`;

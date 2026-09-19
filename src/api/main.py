@@ -30,6 +30,7 @@ from src.api.schemas import (
 )
 from src.api.article_routes import router as article_router
 from src.api.paragraphs import router as paragraph_router
+from src.api.headline import router as headline_router
 from src.database.database import create_tables, engine
 from src.database.models import News
 
@@ -49,6 +50,7 @@ app = FastAPI(
 )
 app.include_router(article_router)
 app.include_router(paragraph_router)
+app.include_router(headline_router)
 
 # Dashboard 用的 templates / static 檔案位置，都相對這個檔案所在目錄，
 # 這樣不管從哪個工作目錄啟動 uvicorn，路徑都是一致的。

@@ -10,8 +10,8 @@
 <body>
 <main>
   <header><p class="eyebrow">標題照妖鏡 · 正文準備</p><h1>保留上下文，讓每段證據有位置</h1>
-    <p>貼上 Max 提供的標題與完整內文，預覽段落編號。這個步驟只整理正文，尚未執行 AI 判斷。</p>
-    <a href="/dashboard">原新聞 Dashboard</a> · <a href="/docs">API 文件</a>
+    <p>貼上標題與完整內文，先預覽段落，再選擇 Gemini 分析。產生預覽時尚未執行 AI 判斷。</p>
+    <a href="/check">從新聞網址開始</a> · <a href="/dashboard">原新聞 Dashboard</a> · <a href="/docs">API 文件</a>
   </header>
   <form id="prepare-form">
     <label for="title">新聞標題</label>
@@ -31,7 +31,10 @@
   <section id="result" hidden aria-labelledby="result-title">
     <div class="result-header"><h2 id="result-title">正文段落</h2><button type="button" id="download-button">下載 JSON</button></div>
     <p id="paragraph-note" class="hint"></p>
-    <p>點選段落編號可高亮該段，供之後的引用介面使用；這不是模型選出的證據。</p>
+    <p>點選段落編號或分析結果中的證據可高亮原段落。</p>
+    <p class="hint">按下分析會將標題與完整正文傳送至 Google Gemini，可能產生 API 費用。第一版最多 20,000 字元、400 段；判斷僅根據本文，不是外部事實查核。</p>
+    <button type="button" id="analyze-button">使用 Gemini 分析標題</button>
+    <div id="analysis-result" hidden aria-live="polite"></div>
     <nav id="paragraph-nav" aria-label="段落導覽"></nav>
     <div id="paragraph-list"></div>
     <details><summary>查看輸入原文（未改寫）</summary><pre id="original-text"></pre></details>

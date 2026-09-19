@@ -113,6 +113,15 @@ class News(Base):
         )
 
 
+class HeadlineAnalysis(Base):
+    """Successful analysis snapshots, keyed by input, model and prompt version."""
+    __tablename__ = "headline_analyses"
+    cache_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    document_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    result_json: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_utcnow)
+
+
 class Article(Base):
     """
     One confirmed input for the headline-consistency checker.

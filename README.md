@@ -1,5 +1,20 @@
 # AI Financial News Intelligence
 
+## Gemini 標題分析原型
+
+安裝 `python -m pip install -r requirements-gemini.txt`，在專案根目錄 `.env` 設定 `GEMINI_API_KEY`；可用 `GEMINI_MODEL` 覆寫預設 `gemini-3.8-flash`。`.env` 不提交，環境變數優先。
+
+啟動 `python -m uvicorn src.api.main:app --reload`，到 `/check` 擷取／貼上、確認儲存文章，再按「前往標題分析」。也可直接到 `/paragraphs` 貼文，先預覽再按「使用 Gemini 分析標題」。按分析才會傳送標題與全文到 Google，可能產生 API 費用。
+
+`POST /headline/analyze` 接收 `title`、`content`、`paragraph_mode` 與 `/articles/prepare` 產生的 `document_id`。第一版上限 20,000 字元、400 段，不截斷。結果有四類判斷、主張、原因、證據 ID、原段落、模型／提示詞版本、时间與用量；以段落引用，尚未切句。缺金鑰、配額、逾時、格式或引用錯誤會明確失敗，不偽裝成資訊不足。
+
+成功結果與輸入快照保存於 SQLite 新表 `headline_analyses`，不改寫原文章。相同輸入、模型、提示詞版本重用結果。單一程序同時只允許一筆分析；目前以本機單一 worker 運行，尚無跨 worker 去重、帳號或公開服務限流。失敗不快取，不自動重試；內容或分段方式修改後須重新預覽。
+
+模型只比對本文，不做外部事實查核；引用存在不代表語意判斷正確，尚待人工評估。程式依據 [Google 結構化輸出文件](https://ai.google.dev/gemini-api/docs/generate-content/structured-output) 使用 REST JSON Schema，並於本機再次驗證。
+
+測試：`python -m pytest tests -q`（使用模擬 Gemini，不耗用額度）。
+
+
 財經新聞蒐集與 AI 分析原型。將 RSS 新聞存入 SQLite，使用情緒分析、主題分類與摘要模型整理資訊，再透過 FastAPI 與網頁 Dashboard 呈現。
 
 另外提供「貼上英文新聞、即時分析」功能，方便直接體驗模型輸出。
